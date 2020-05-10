@@ -11,3 +11,12 @@ export const USER = gql`
     }
   }
 `;
+
+export const LOGIN_USER = gql`
+  mutation loginUser($phoneNo: String!, $password: String!) {
+    loginUser(phoneNo: $phoneNo, password: $password) {
+      id
+      isAdmin
+    }
+  }
+`;
