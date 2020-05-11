@@ -67,6 +67,8 @@ const IndexPage = () => {
       });
 
       console.log(login);
+
+      localStorage.setItem("id", login.data.loginUser.id);
     }
   };
 
