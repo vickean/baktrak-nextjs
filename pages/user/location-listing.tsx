@@ -5,7 +5,7 @@ import Layout from "../../components/layout";
 
 const LocationListing = () => {
   return (
-    <Layout>
+    <Layout logout>
       <div>
         <h1>LocationListing</h1>
       </div>

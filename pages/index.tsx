@@ -16,6 +16,8 @@ import styles from "./general.module.css";
 import { FormFieldProps } from "../models/Form";
 import { Action } from "../models/Action";
 import Link from "next/link";
+import { LOGIN_LOCATION } from "../gql/locations";
+import { useRouter } from "next/router";
 
 interface FormState {
   phoneNo: FormFieldProps;
@@ -24,7 +26,10 @@ interface FormState {
 }
 
 const IndexPage = () => {
+  const router = useRouter();
+
   const [loginUser] = useMutation(LOGIN_USER);
+  const [loginLocation] = useMutation(LOGIN_LOCATION);
 
   const initialState: FormState = {
     phoneNo: {
@@ -69,6 +74,27 @@ const IndexPage = () => {
       console.log(login);
 
       localStorage.setItem("id", login.data.loginUser.id);
+
+      if (login.data.loginUser.isAdmin) {
+        router.push("/admin/search");
+      } else {
+        router.push("/user/location-listing");
+      }
+    }
+
+    if (state.role.value === "premise") {
+      const login = await loginLocation({
+        variables: {
+          phoneNo: state.phoneNo.value.trim(),
+          password: state.password.value.trim(),
+        },
+      });
+
+      console.log(login);
+
+      localStorage.setItem("id", login.data.loginLocation.id);
+
+      router.push("/location/profile");
     }
   };
 
