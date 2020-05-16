@@ -1,19 +1,50 @@
 import Head from "next/head";
 import styles from "./layout.module.css";
-import { Typography, AppBar, Toolbar, Button } from "@material-ui/core";
+import {
+  Typography,
+  AppBar,
+  Toolbar,
+  Button,
+  Snackbar,
+} from "@material-ui/core";
 import { useRouter } from "next/router";
+import { Reducer, useReducer, useEffect } from "react";
+import { Action } from "../models/Action";
+
+interface LayoutState {
+  snackBar: boolean;
+}
 
 export default function Layout({
   children,
   back,
   logout,
   backpath,
+  snackBarState,
+  snackBarMsg,
 }: {
   children: React.ReactNode;
   back?: boolean;
   logout?: boolean;
   backpath?: string;
+  snackBarState?: boolean;
+  snackBarMsg?: string;
 }) {
+  const initialState: LayoutState = {
+    snackBar: false,
+  };
+
+  const reducer: Reducer<LayoutState, Action> = (prevState, action) => {
+    switch (action.type) {
+      case "reset":
+        return initialState;
+      default:
+        return { ...prevState, [action.type]: action.payload };
+    }
+  };
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+
   const router = useRouter();
 
   const handleBack = () => {
@@ -24,6 +55,22 @@ export default function Layout({
     localStorage.removeItem("id");
     router.push("/");
   };
+
+  const handleSnackBarClose = () => {
+    dispatch({
+      type: "snackBar",
+      payload: false,
+    });
+  };
+
+  useEffect(() => {
+    if (snackBarState) {
+      dispatch({
+        type: "snackBar",
+        payload: true,
+      });
+    }
+  }, [snackBarState]);
 
   return (
     <div className={styles.overall}>
@@ -64,6 +111,13 @@ export default function Layout({
       </AppBar>
       <Toolbar />
       <main>{children}</main>
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        key={`snackbar`}
+        open={state.snackBar}
+        onClose={handleSnackBarClose}
+        message={snackBarMsg}
+      />
     </div>
   );
 }

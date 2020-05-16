@@ -14,7 +14,9 @@ import {
 } from "@material-ui/core";
 import { FormFieldProps } from "../models/Form";
 import { Action } from "../models/Action";
-import { LOGIN_USER } from "../gql/users";
+import { CREATE_USER } from "../gql/users";
+import { useRouter } from "next/router";
+import { CREATE_LOCATION } from "../gql/locations";
 
 interface FormState {
   phoneNo: FormFieldProps;
@@ -25,10 +27,39 @@ interface FormState {
   confirmPassword: FormFieldProps;
   address: FormFieldProps;
   idPhrase: FormFieldProps;
+  snackBar: boolean;
 }
 
 const Register = () => {
-  const [loginUser] = useMutation(LOGIN_USER);
+  const router = useRouter();
+
+  const [createUser] = useMutation(CREATE_USER, {
+    onCompleted: () => {
+      dispatch({
+        type: "snackBar",
+        payload: true,
+      });
+
+      router.push("/");
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });
+
+  const [createLocation] = useMutation(CREATE_LOCATION, {
+    onCompleted: () => {
+      dispatch({
+        type: "snackBar",
+        payload: true,
+      });
+
+      router.push("/");
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });
 
   const initialState: FormState = {
     phoneNo: {
@@ -71,6 +102,7 @@ const Register = () => {
       helperText: "",
       value: "",
     },
+    snackBar: false,
   };
 
   const reducer: Reducer<FormState, Action> = (prevState, action) => {
@@ -87,22 +119,55 @@ const Register = () => {
   const handleSubmit = async () => {
     console.log(state);
 
-    // if (state.role.value === "user") {
-    //   const login = await loginUser({
-    //     variables: {
-    //       phoneNo: state.phoneNo.value.trim(),
-    //       password: state.password.value.trim(),
-    //     },
-    //   });
+    let err: boolean = false;
 
-    //   console.log(login);
+    if (state.password.value !== state.confirmPassword.value) {
+      err = true;
+      dispatch({
+        type: "confirmPassword",
+        payload: {
+          value: state.confirmPassword.value,
+          error: true,
+          helperText: "Passwords do not match!",
+        },
+      });
+    }
 
-    //   localStorage.setItem("id", login.data.loginUser.id);
-    // }
+    if (err) return;
+
+    if (state.role.value === "user") {
+      createUser({
+        variables: {
+          name: state.name.value.trim(),
+          phoneNo: state.phoneNo.value.trim(),
+          email: state.email.value.trim(),
+          password: state.password.value.trim(),
+          address: state.address.value.trim(),
+        },
+      });
+    }
+
+    if (state.role.value === "premise") {
+      createLocation({
+        variables: {
+          name: state.name.value.trim(),
+          phoneNo: state.phoneNo.value.trim(),
+          email: state.email.value.trim(),
+          password: state.password.value.trim(),
+          address: state.address.value.trim(),
+          idPhrase: state.idPhrase.value.trim(),
+        },
+      });
+    }
   };
 
   return (
-    <Layout back backpath="/">
+    <Layout
+      back
+      backpath="/"
+      snackBarState={state.snackBar}
+      snackBarMsg="Registration complete"
+    >
       <Card className={styles.card}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
@@ -203,6 +268,28 @@ const Register = () => {
           <Grid item xs={12}>
             <TextField
               required
+              label="Address"
+              variant="outlined"
+              fullWidth
+              multiline
+              value={state.address.value}
+              error={state.address.error}
+              helperText={state.address.helperText}
+              onChange={(e) => {
+                dispatch({
+                  type: "address",
+                  payload: {
+                    value: e.target.value,
+                    error: false,
+                    helperText: "",
+                  },
+                });
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              required
               label="Password"
               variant="outlined"
               fullWidth
@@ -250,7 +337,6 @@ const Register = () => {
               label="idPhrase"
               variant="outlined"
               fullWidth
-              type="password"
               value={state.idPhrase.value}
               error={state.idPhrase.error}
               helperText={state.idPhrase.helperText}

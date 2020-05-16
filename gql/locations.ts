@@ -20,3 +20,23 @@ export const LOGIN_LOCATION = gql`
     }
   }
 `;
+
+export const CREATE_LOCATION = gql`
+  mutation createLocation(
+    $name: String!
+    $phoneNo: String!
+    $email: String!
+    $password: String!
+    $address: String!
+    $idPhrase: String!
+  ) {
+    createLocation(
+      name: $name
+      phoneNo: $phoneNo
+      email: $email
+      password: $password
+      address: $address
+      idPhrase: $idPhrase
+    )
+  }
+`;

@@ -20,3 +20,21 @@ export const LOGIN_USER = gql`
     }
   }
 `;
+
+export const CREATE_USER = gql`
+  mutation createuser(
+    $name: String!
+    $phoneNo: String!
+    $email: String!
+    $password: String!
+    $address: String!
+  ) {
+    createUser(
+      name: $name
+      phoneNo: $phoneNo
+      email: $email
+      password: $password
+      address: $address
+    )
+  }
+`;
