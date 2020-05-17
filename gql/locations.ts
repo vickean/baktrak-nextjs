@@ -40,3 +40,9 @@ export const CREATE_LOCATION = gql`
     )
   }
 `;
+
+export const IS_IDPHRASE_TAKEN = gql`
+  query isIdPhraseTaken($idPhrase: String!) {
+    isIdPhraseTaken(idPhrase: $idPhrase)
+  }
+`;

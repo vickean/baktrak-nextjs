@@ -1,6 +1,6 @@
-import React, { Reducer, useReducer } from "react";
+import React, { Reducer, useReducer, useEffect } from "react";
 import { withApollo } from "../libs/apollo";
-import { useQuery, useMutation } from "@apollo/react-hooks";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/react-hooks";
 import Layout from "../components/layout";
 import styles from "./general.module.css";
 import {
@@ -11,12 +11,17 @@ import {
   MenuItem,
   Link,
   Button,
+  InputAdornment,
+  CircularProgress,
 } from "@material-ui/core";
 import { FormFieldProps } from "../models/Form";
 import { Action } from "../models/Action";
 import { CREATE_USER } from "../gql/users";
 import { useRouter } from "next/router";
-import { CREATE_LOCATION } from "../gql/locations";
+import { CREATE_LOCATION, IS_IDPHRASE_TAKEN } from "../gql/locations";
+import useDebounce from "../libs/use-debounce";
+import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import CancelIcon from "@material-ui/icons/Cancel";
 
 interface FormState {
   phoneNo: FormFieldProps;
@@ -30,8 +35,35 @@ interface FormState {
   snackBar: boolean;
 }
 
+const IdPhraseStatus = (props: {
+  emptyCheck: boolean;
+  loading: boolean;
+  status: boolean;
+}) => {
+  const { emptyCheck, loading, status } = props;
+
+  if (emptyCheck) {
+    return null;
+  }
+
+  if (loading) {
+    return <CircularProgress size="1.5rem" />;
+  } else {
+    if (!status) {
+      return <CheckCircleIcon style={{ color: "#4CAF50" }} />;
+    } else {
+      return <CancelIcon style={{ color: "#F44336" }} />;
+    }
+  }
+};
+
 const Register = () => {
   const router = useRouter();
+
+  const [
+    isIdPhraseTaken,
+    { data: idPhraseData, loading: idPhraseLoading, error: idPhraseError },
+  ] = useLazyQuery(IS_IDPHRASE_TAKEN);
 
   const [createUser] = useMutation(CREATE_USER, {
     onCompleted: () => {
@@ -160,6 +192,22 @@ const Register = () => {
       });
     }
   };
+
+  const debouncedIdPhrase = useDebounce(state.idPhrase.value, 500);
+
+  useEffect(() => {
+    if (debouncedIdPhrase) {
+      isIdPhraseTaken({
+        variables: {
+          idPhrase: state.idPhrase.value,
+        },
+      });
+    }
+  }, [debouncedIdPhrase]);
+
+  useEffect(() => {
+    console.log(idPhraseLoading, idPhraseData);
+  }, [idPhraseLoading, idPhraseData]);
 
   return (
     <Layout
@@ -344,11 +392,22 @@ const Register = () => {
                 dispatch({
                   type: "idPhrase",
                   payload: {
-                    value: e.target.value,
+                    value: e.target.value.trim(),
                     error: false,
                     helperText: "",
                   },
                 });
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IdPhraseStatus
+                      emptyCheck={state.idPhrase.value === ""}
+                      loading={idPhraseLoading}
+                      status={idPhraseData?.isIdPhraseTaken}
+                    />
+                  </InputAdornment>
+                ),
               }}
             />
           </Grid>
