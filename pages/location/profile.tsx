@@ -74,7 +74,7 @@ const Profile = () => {
             </Typography>
           </Grid>
           <Grid item container xs={12}>
-            <Typography variant="body1">{data?.Location.idPhrase}</Typography>
+            <Typography variant="h4">{data?.Location.idPhrase}</Typography>
           </Grid>
         </Grid>
       </Card>
